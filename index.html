@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSE Tech Fest 2026 - Certificate Generator Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@600;700;800;900&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #090e17;
+      --panel-bg: #111a29;
+      --card-bg: #182338;
+      --border-color: #243552;
+      --gold-primary: #d4af37;
+      --gold-glow: #f5d77f;
+      --navy-deep: #0b172a;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Header */
+    header {
+      background: linear-gradient(180deg, #131f33 0%, #0d1524 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      height: 42px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    .brand-title h1 {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(90deg, #ffffff, #d4af37);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      outline: none;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #d4af37 0%, #aa8421 100%);
+      color: #0b172a;
+      box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
+    }
+    .btn-gold:hover {
+      background: linear-gradient(135deg, #f0cc5b 0%, #c19629 100%);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-color);
+      color: #e2e8f0;
+    }
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--gold-primary);
+    }
+
+    .btn-batch {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+    }
+    .btn-batch:hover {
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+      transform: translateY(-1px);
+    }
+
+    /* Main App Layout */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr 340px;
+      flex: 1;
+      height: calc(100vh - 71px);
+      overflow: hidden;
+    }
+
+    /* LEFT SIDEBAR: List of Certificates */
+    .sidebar-left {
+      background: var(--panel-bg);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      gap: 10px;
+    }
+
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .filter-tabs {
+      display: flex;
+      padding: 8px 12px;
+      gap: 6px;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(0,0,0,0.15);
+    }
+
+    .tab-btn {
+      padding: 6px 11px;
+      font-size: 11.5px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--card-bg);
+      color: var(--gold-primary);
+      border-color: var(--border-color);
+    }
+
+    .cert-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cert-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 9px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+    }
+
+    .cert-item:hover {
+      border-color: var(--accent-blue);
+      transform: translateX(2px);
+    }
+
+    .cert-item.active {
+      border-color: var(--gold-primary);
+      background: linear-gradient(90deg, rgba(212, 175, 55, 0.12) 0%, rgba(24, 35, 56, 0.9) 100%);
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
+    }
+
+    .cert-item .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cert-item .recipient-name {
+      font-weight: 700;
+      font-size: 13.5px;
+      color: #fff;
+    }
+
+    .badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .badge-champion {
+      background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+      color: #fff;
+    }
+
+    .badge-runner {
+      background: linear-gradient(135deg, #64748b 0%, #334155 100%);
+      color: #f1f5f9;
+    }
+
+    .badge-pos {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #fff;
+    }
+
+    .badge-lead {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+      color: #fff;
+    }
+
+    .cert-item .item-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* CENTER: Live Preview Viewport */
+    .viewport {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow: auto;
+      padding: 24px 20px 60px 20px;
+      background: #06090e;
+      position: relative;
+    }
+
+    .scale-bar {
+      position: absolute;
+      bottom: 20px;
+      background: rgba(17, 26, 41, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(8px);
+      z-index: 50;
+    }
+
+    .scale-bar button {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .scale-bar span {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-width: 45px;
+      text-align: center;
+    }
+
+    /* THE CERTIFICATE CANVAS (1024 x 682 Standard Aspect Ratio, Scalable) */
+    .cert-wrapper {
+      transform-origin: top center;
+      transition: transform 0.2s ease;
+      filter: drop-shadow(0 15px 35px rgba(0,0,0,0.7));
+    }
+
+    #certificate {
+      width: 1024px;
+      height: 682px;
+      position: relative;
+      background: url('cert_bg_refined_corners_1x.png') no-repeat center center;
+      background-size: 100% 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 48px;
+      color: #0b172a;
+      box-sizing: border-box;
+      transition: background-image 0.3s ease;
+    }
+
+    /* LOGO HEADER WITH FIXED WIDTH SLOTS TO KEEP CENTER LOGO 100% BALANCED */
+    .cert-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      height: 96px;
+      padding: 0 118px; /* Safe padding from diagonal corner decorations */
+    }
+
+    .cert-logo-box {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+
+    .cert-logo-box.left {
+      width: 140px;
+      justify-content: flex-start;
+    }
+
+    .cert-logo-box.mid {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .cert-logo-box.right {
+      width: 140px;
+      justify-content: flex-end;
+    }
+
+    .cert-logo-left {
+      height: 74px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .cert-logo-mid {
+      height: 88px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .cert-logo-right {
+      height: 78px;
+      max-width: 135px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    /* TITLE BLOCK */
+    .cert-title-block {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .cert-main-title {
+      font-family: 'Cinzel', serif;
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: 7px;
+      color: #0c1a30;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .cert-sub-flourish {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 6px;
+    }
+
+    .flourish-line {
+      height: 1.5px;
+      width: 65px;
+      background: linear-gradient(90deg, transparent, #b88e33, #d4af37);
+    }
+    .flourish-line.right {
+      background: linear-gradient(90deg, #d4af37, #b88e33, transparent);
+    }
+
+    .cert-subtitle {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      color: #b88e33;
+      text-transform: uppercase;
+    }
+
+    /* RIBBON BADGE */
+    .ribbon-container {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .ribbon-banner {
+      background: linear-gradient(180deg, #0d1e38 0%, #071224 100%);
+      border-top: 1.5px solid #d4af37;
+      border-bottom: 1.5px solid #d4af37;
+      padding: 6.5px 36px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+
+    /* Ribbon tails */
+    .ribbon-banner::before, .ribbon-banner::after {
+      content: '';
+      position: absolute;
+      top: -1.5px;
+      bottom: -1.5px;
+      width: 22px;
+      background: inherit;
+      border-top: 1.5px solid #d4af37;
+      border-bottom: 1.5px solid #d4af37;
+    }
+
+    .ribbon-banner::before {
+      left: -20px;
+      clip-path: polygon(100% 0, 0 50%, 100% 100%);
+      border-left: 1.5px solid #d4af37;
+    }
+
+    .ribbon-banner::after {
+      right: -20px;
+      clip-path: polygon(0 0, 100% 50%, 0 100%);
+      border-right: 1.5px solid #d4af37;
+    }
+
+    .ribbon-diamond {
+      color: #d4af37;
+      font-size: 11px;
+    }
+
+    .ribbon-text {
+      font-family: 'Cinzel', serif;
+      font-size: 15.5px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #ffffff;
+      text-transform: uppercase;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    /* BODY SECTION */
+    .cert-body {
+      text-align: center;
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 760px;
+    }
+
+    .cert-preamble {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 15px;
+      font-style: italic;
+      color: #334155;
+    }
+
+    .cert-recipient {
+      font-family: 'Alex Brush', cursive;
+      font-size: 47px;
+      color: #0c1a30;
+      line-height: 1.1;
+      margin-top: 2px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    .recipient-underline {
+      width: 480px;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent, #b88e33 25%, #d4af37 50%, #b88e33 75%, transparent);
+      margin-bottom: 10px;
+    }
+
+    .cert-statement {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: #1e293b;
+      max-width: 720px;
+    }
+
+    .cert-statement b {
+      color: #0b172a;
+      font-weight: 700;
+    }
+
+    .cert-statement .role-highlight {
+      color: #b8860b !important;
+      font-weight: 800 !important;
+      font-size: 1.08em;
+      letter-spacing: 0.3px;
+      display: inline-block;
+    }
+
+    /* FOOTER SIGNATURES (Supports 3 columns for Events, and 2 columns for Leadership) */
+    .cert-footer {
+      position: absolute;
+      bottom: 38px;
+      left: 100px;
+      right: 100px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 25px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .cert-footer.two-col {
+      grid-template-columns: 1fr 1fr;
+      max-width: 580px;
+      left: 0;
+      right: 0;
+      margin: 0 auto;
+    }
+
+    .sig-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .sig-line {
+      width: 195px;
+      height: 1.5px;
+      background: #0d1e38;
+      margin-bottom: 7px;
+    }
+
+    .sig-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #0c1a30;
+      line-height: 1.25;
+    }
+
+    .sig-role {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: #475569;
+      line-height: 1.35;
+      margin-top: 2px;
+      white-space: pre-line;
+    }
+
+    /* RIGHT SIDEBAR: Live Editor */
+    .sidebar-right {
+      background: var(--panel-bg);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 18px;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group textarea, .form-group select {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 7px;
+      padding: 8px 10px;
+      color: #fff;
+      font-size: 12.5px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 55px;
+    }
+
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      border-color: var(--gold-primary);
+    }
+
+    /* Progress Modal for Batch Export */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--gold-primary);
+      border-radius: 12px;
+      padding: 24px;
+      width: 420px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .progress-bar-bg {
+      background: var(--card-bg);
+      border-radius: 8px;
+      height: 12px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      height: 100%;
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    /* Print Styles */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #certificate, #certificate * {
+        visibility: visible;
+      }
+      #certificate {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 40px;
+        box-shadow: none;
+      }
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <img src="BGCTUB_Logo_clean.png" alt="BGCTUB" class="brand-logo">
+      <div class="brand-title">
+        <h1>CSE TECH FEST 2026</h1>
+        <p>Official Certificate Generator & Studio</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Print
+      </button>
+      <button class="btn btn-outline" id="downloadPngBtn" onclick="exportCurrentPNG()">
+        <i class="fa-solid fa-image"></i> Export PNG
+      </button>
+      <button class="btn btn-gold" id="downloadPdfBtn" onclick="exportCurrentPDF()">
+        <i class="fa-solid fa-file-pdf"></i> Export PDF
+      </button>
+      <button class="btn btn-batch" onclick="batchExportAllPDF()">
+        <i class="fa-solid fa-layer-group"></i> Batch Export All (23)
+      </button>
+    </div>
+  </header>
+
+  <!-- APP LAYOUT -->
+  <div class="app-layout">
+    
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar-left">
+      <div class="sidebar-header">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); font-size: 13px;"></i>
+          <input type="text" id="searchInput" placeholder="Search by name or event..." oninput="filterCertificates()">
+        </div>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="tab-btn active" onclick="setCategoryFilter('All')">All (23)</button>
+        <button class="tab-btn" onclick="setCategoryFilter('Robotics')">Robotics & IoT (6)</button>
+        <button class="tab-btn" onclick="setCategoryFilter('Programming')">Programming (9)</button>
+        <button class="tab-btn" onclick="setCategoryFilter('IT Olympiad')">IT (3)</button>
+        <button class="tab-btn" onclick="setCategoryFilter('Physics & Math')">Math/Phys (3)</button>
+        <button class="tab-btn" onclick="setCategoryFilter('Leadership')">Leadership (2)</button>
+      </div>
+
+      <div class="cert-list" id="certList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- CENTER VIEWPORT -->
+    <div class="viewport">
+      <div class="cert-wrapper" id="certWrapper">
+        <div id="certificate">
+          
+          <!-- HEADER LOGOS (Symmetric width boxes to guarantee center logo alignment) -->
+          <div class="cert-header">
+            <div class="cert-logo-box left">
+              <img id="viewLeftLogo" src="BGCTUB_Logo_clean.png" alt="BGCTUB Logo" class="cert-logo-left">
+            </div>
+            <div class="cert-logo-box mid">
+              <img id="viewMidLogo" src="Tech_Fest_Logo_clean.png" alt="CSE Tech Fest 2026 Logo" class="cert-logo-mid">
+            </div>
+            <div class="cert-logo-box right">
+              <img id="viewRightLogo" src="BGCTUB_Robotics_Logo.png" alt="Club Logo" class="cert-logo-right">
+            </div>
+          </div>
+
+          <!-- CERTIFICATE TITLE -->
+          <div class="cert-title-block">
+            <h1 class="cert-main-title" id="viewMainTitle">CERTIFICATE</h1>
+            <div class="cert-sub-flourish">
+              <div class="flourish-line"></div>
+              <span class="cert-subtitle" id="viewSubTitle">OF ACHIEVEMENT</span>
+              <div class="flourish-line right"></div>
+            </div>
+          </div>
+
+          <!-- RIBBON BADGE -->
+          <div class="ribbon-container">
+            <div class="ribbon-banner">
+              <i class="fa-solid fa-diamond ribbon-diamond"></i>
+              <span class="ribbon-text" id="viewRibbonText">ROBOTICS & IoT PROJECT EXHIBITION</span>
+              <i class="fa-solid fa-diamond ribbon-diamond"></i>
+            </div>
+          </div>
+
+          <!-- BODY SECTION -->
+          <div class="cert-body">
+            <p class="cert-preamble" id="viewPreamble">This is to certify that</p>
+            <h2 class="cert-recipient" id="viewRecipientName">Mohammad Jamshidul Hafiz</h2>
+            <div class="recipient-underline"></div>
+            <p class="cert-statement" id="viewStatement">
+              has achieved the <b class="role-highlight">Champion</b> position in the <b>Robotics & IoT Project Exhibition</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.
+            </p>
+          </div>
+
+          <!-- FOOTER / SIGNATURES -->
+          <div class="cert-footer" id="viewCertFooter">
+            <div class="sig-col" id="colCoord">
+              <div class="sig-line"></div>
+              <div class="sig-name" id="viewCoordName">Tanzi Ahmed Chowdhury</div>
+              <div class="sig-role" id="viewCoordRole">Coordinator&#10;Robotics & IoT Project Exhibition&#10;CSE Tech Fest 2026, BGCTUB</div>
+            </div>
+
+            <div class="sig-col" id="colChair">
+              <div class="sig-line"></div>
+              <div class="sig-name" id="viewChairName">Mohammad Salah Uddin Chowdury</div>
+              <div class="sig-role" id="viewChairRole">Chairman&#10;Department of CSE, BGCTUB</div>
+            </div>
+
+            <div class="sig-col" id="colVc">
+              <div class="sig-line"></div>
+              <div class="sig-name" id="viewVcName">Prof. Dr. Md. Manzoorul Kibria</div>
+              <div class="sig-role" id="viewVcRole">Vice Chancellor&#10;BGC Trust University Bangladesh</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Zoom bar -->
+      <div class="scale-bar">
+        <button onclick="changeZoom(-0.05)"><i class="fa-solid fa-minus"></i></button>
+        <span id="zoomVal">85%</span>
+        <button onclick="changeZoom(0.05)"><i class="fa-solid fa-plus"></i></button>
+        <button onclick="resetZoom()"><i class="fa-solid fa-rotate-right"></i> Reset</button>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: LIVE EDITOR -->
+    <div class="sidebar-right">
+      <div class="section-title">
+        <i class="fa-solid fa-sliders"></i> Certificate Customizer
+      </div>
+
+      <div class="form-group">
+        <label>Recipient Full Name</label>
+        <input type="text" id="editRecipientName" oninput="updateLive()">
+      </div>
+
+      <div class="form-group">
+        <label>Position / Award Type</label>
+        <input type="text" id="editPosition" oninput="updateLive()">
+      </div>
+
+      <div class="form-group">
+        <label>Certificate Title</label>
+        <select id="editSubTitle" onchange="updateLive()">
+          <option value="OF ACHIEVEMENT">OF ACHIEVEMENT</option>
+          <option value="OF PARTICIPATION">OF PARTICIPATION</option>
+          <option value="OF APPRECIATION">OF APPRECIATION</option>
+          <option value="OF EXCELLENCE">OF EXCELLENCE</option>
+          <option value="OF MERIT">OF MERIT</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Ribbon Banner Text</label>
+        <input type="text" id="editRibbonText" oninput="updateLive()">
+      </div>
+
+      <div class="form-group">
+        <label>Preamble</label>
+        <input type="text" id="editPreamble" oninput="updateLive()">
+      </div>
+
+      <div class="form-group">
+        <label>Award / Recognition Statement</label>
+        <textarea id="editStatement" rows="3" oninput="updateLive()"></textarea>
+      </div>
+
+      <div class="section-title" style="margin-top: 10px;">
+        <i class="fa-solid fa-feather-pointed"></i> Signature Authorities
+      </div>
+
+      <div id="coordInputSection">
+        <div class="form-group">
+          <label>Event Coordinator Name</label>
+          <input type="text" id="editCoordName" oninput="updateLive()">
+        </div>
+
+        <div class="form-group">
+          <label>Coordinator Designation & Dept</label>
+          <textarea id="editCoordRole" rows="2" oninput="updateLive()"></textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Chairman Name</label>
+        <input type="text" id="editChairName" oninput="updateLive()">
+      </div>
+
+      <div class="form-group">
+        <label>Vice Chancellor Name</label>
+        <input type="text" id="editVcName" oninput="updateLive()">
+      </div>
+
+      <div class="section-title" style="margin-top: 10px;">
+        <i class="fa-solid fa-image"></i> Logos Configuration
+      </div>
+
+      <div class="form-group">
+        <label>Right Upper Logo</label>
+        <select id="editRightLogo" onchange="updateLive()">
+          <option value="">None (No Logo)</option>
+          <option value="BGCTUB_Robotics_Logo.png">Robotics Club (BGCTUB_Robotics_Logo.png)</option>
+          <option value="BGCTUB_Coding_Club_clean.png">Coding Club (BGCTUB_Coding_Club_clean.png)</option>
+          <option value="ACS_Logo_transparent.png">ACS Logo (ACS_Logo_transparent.png)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Middle Tech Fest Logo</label>
+        <select id="editMidLogo" onchange="updateLive()">
+          <option value="Tech_Fest_Logo_clean.png">Tech Fest 2026 (Clean 3D Logo)</option>
+        </select>
+      </div>
+
+      <div class="section-title" style="margin-top: 10px;">
+        <i class="fa-solid fa-palette"></i> Certificate Theme
+      </div>
+
+      <div class="form-group">
+        <label>Theme Template</label>
+        <select id="editThemeSelect" onchange="changeTheme(this.value)">
+          <option value="cert_bg_refined_corners_1x.png" selected>Refined Geometric Navy & Gold (Sir's Review)</option>
+          <option value="cert_bg_tech_fest_vibe.png">Tech Fest Cyber Vibe</option>
+          <option value="cert_bg_royal_prestige.png">Royal Prestige Classic</option>
+          <option value="cert_bg_modern_luxury.png">Modern Luxury Border</option>
+          <option value="cert_bg_clean.png">Original Standard</option>
+        </select>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- BATCH EXPORT PROGRESS MODAL -->
+  <div class="modal-overlay" id="batchModal">
+    <div class="modal-card">
+      <i class="fa-solid fa-cog fa-spin" style="font-size: 32px; color: var(--gold-primary); margin-bottom: 12px;"></i>
+      <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">Batch Generating Certificates...</h3>
+      <p id="modalProgressText" style="font-size: 13px; color: var(--text-muted);">Processing 0 of 23</p>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="modalProgressBar"></div>
+      </div>
+      <button class="btn btn-outline" style="font-size: 12px;" onclick="cancelBatchExport()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    // COMPLETE CERTIFICATES DATA (23 INDIVIDUAL RECIPIENTS)
+    // Rule 1: Right logo ONLY for Robotics & IoT and Programming Contest.
+    // Rule 2: Leadership has NO right logo and NO coordinator (2 signatures: Chairman & VC).
+    const certificates = [
+      // 1. Robotics & IoT Project Exhibition
+      {
+        id: "robotics_champ_1",
+        category: "Robotics",
+        badge: "Champion",
+        badgeClass: "badge-champion",
+        name: "Mohammad Jamshidul Hafiz",
+        position: "Champion",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "ROBOTICS & IoT PROJECT EXHIBITION",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">Champion</b> position in the <b>Robotics & IoT Project Exhibition</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Tanzi Ahmed Chowdhury",
+        coordRole: "Coordinator\nRobotics & IoT Project Exhibition\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Robotics_Logo.png",
+        hasCoord: true
+      },
+      {
+        id: "robotics_champ_2",
+        category: "Robotics",
+        badge: "Champion",
+        badgeClass: "badge-champion",
+        name: "Mst Subrina Sultana",
+        position: "Champion",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "ROBOTICS & IoT PROJECT EXHIBITION",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">Champion</b> position in the <b>Robotics & IoT Project Exhibition</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Tanzi Ahmed Chowdhury",
+        coordRole: "Coordinator\nRobotics & IoT Project Exhibition\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Robotics_Logo.png",
+        hasCoord: true
+      },
+      {
+        id: "robotics_champ_3",
+        category: "Robotics",
+        badge: "Champion",
+        badgeClass: "badge-champion",
+        name: "Tanjemul Islam",
+        position: "Champion",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "ROBOTICS & IoT PROJECT EXHIBITION",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">Champion</b> position in the <b>Robotics & IoT Project Exhibition</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Tanzi Ahmed Chowdhury",
+        coordRole: "Coordinator\nRobotics & IoT Project Exhibition\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Robotics_Logo.png",
+        hasCoord: true
+      },
+      {
+        id: "robotics_runner_1",
+        category: "Robotics",
+        badge: "Runner-up",
+        badgeClass: "badge-runner",
+        name: "Md. Abdul Awal Khaled",
+        position: "Runner-up",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "ROBOTICS & IoT PROJECT EXHIBITION",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">Runner-up</b> position in the <b>Robotics & IoT Project Exhibition</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Tanzi Ahmed Chowdhury",
+        coordRole: "Coordinator\nRobotics & IoT Project Exhibition\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Robotics_Logo.png",
+        hasCoord: true
+      },
+      {
+        id: "robotics_runner_2",
+        category: "Robotics",
+        badge: "Runner-up",
+        badgeClass: "badge-runner",
+        name: "Mainul Islam",
+        position: "Runner-up",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "ROBOTICS & IoT PROJECT EXHIBITION",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">Runner-up</b> position in the <b>Robotics & IoT Project Exhibition</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Tanzi Ahmed Chowdhury",
+        coordRole: "Coordinator\nRobotics & IoT Project Exhibition\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Robotics_Logo.png",
+        hasCoord: true
+      },
+      {
+        id: "robotics_runner_3",
+        category: "Robotics",
+        badge: "Runner-up",
+        badgeClass: "badge-runner",
+        name: "Sheikh Mohammod Imran",
+        position: "Runner-up",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "ROBOTICS & IoT PROJECT EXHIBITION",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">Runner-up</b> position in the <b>Robotics & IoT Project Exhibition</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Tanzi Ahmed Chowdhury",
+        coordRole: "Coordinator\nRobotics & IoT Project Exhibition\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Robotics_Logo.png",
+        hasCoord: true
+      },
+
+      // 2. Programming Contest
+      {
+        id: "prog_champ_1",
+        category: "Programming",
+        badge: "Champion",
+        badgeClass: "badge-champion",
+        name: "Sourav Palit",
+        position: "Champion",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PROGRAMMING CONTEST",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">Champion</b> position in the <b>Programming Contest</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Md. Asaduzzaman",
+        coordRole: "Coordinator\nProgramming Contest\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Coding_Club_clean.png",
+        hasCoord: true
+      },
+      {
+        id: "prog_champ_2",
+        category: "Programming",
+        badge: "Champion",
+        badgeClass: "badge-champion",
+        name: "Turjoy Chakraborty Tushar",
+        position: "Champion",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PROGRAMMING CONTEST",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">Champion</b> position in the <b>Programming Contest</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Md. Asaduzzaman",
+        coordRole: "Coordinator\nProgramming Contest\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Coding_Club_clean.png",
+        hasCoord: true
+      },
+      {
+        id: "prog_champ_3",
+        category: "Programming",
+        badge: "Champion",
+        badgeClass: "badge-champion",
+        name: "Simanto Barua",
+        position: "Champion",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PROGRAMMING CONTEST",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">Champion</b> position in the <b>Programming Contest</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Md. Asaduzzaman",
+        coordRole: "Coordinator\nProgramming Contest\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Coding_Club_clean.png",
+        hasCoord: true
+      },
+      {
+        id: "prog_run1_1",
+        category: "Programming",
+        badge: "1st Runner-up",
+        badgeClass: "badge-runner",
+        name: "Nurunnabi",
+        position: "1st Runner-up",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PROGRAMMING CONTEST",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">1st Runner-up</b> position in the <b>Programming Contest</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Md. Asaduzzaman",
+        coordRole: "Coordinator\nProgramming Contest\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Coding_Club_clean.png",
+        hasCoord: true
+      },
+      {
+        id: "prog_run1_2",
+        category: "Programming",
+        badge: "1st Runner-up",
+        badgeClass: "badge-runner",
+        name: "MD Istiaq Ahmad Raihan",
+        position: "1st Runner-up",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PROGRAMMING CONTEST",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">1st Runner-up</b> position in the <b>Programming Contest</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Md. Asaduzzaman",
+        coordRole: "Coordinator\nProgramming Contest\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Coding_Club_clean.png",
+        hasCoord: true
+      },
+      {
+        id: "prog_run1_3",
+        category: "Programming",
+        badge: "1st Runner-up",
+        badgeClass: "badge-runner",
+        name: "Monjur Alam",
+        position: "1st Runner-up",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PROGRAMMING CONTEST",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">1st Runner-up</b> position in the <b>Programming Contest</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Md. Asaduzzaman",
+        coordRole: "Coordinator\nProgramming Contest\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Coding_Club_clean.png",
+        hasCoord: true
+      },
+      {
+        id: "prog_run2_1",
+        category: "Programming",
+        badge: "2nd Runner-up",
+        badgeClass: "badge-runner",
+        name: "Sharmin Aktar",
+        position: "2nd Runner-up",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PROGRAMMING CONTEST",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">2nd Runner-up</b> position in the <b>Programming Contest</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Md. Asaduzzaman",
+        coordRole: "Coordinator\nProgramming Contest\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Coding_Club_clean.png",
+        hasCoord: true
+      },
+      {
+        id: "prog_run2_2",
+        category: "Programming",
+        badge: "2nd Runner-up",
+        badgeClass: "badge-runner",
+        name: "Mohammad Chahad Chalehin",
+        position: "2nd Runner-up",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PROGRAMMING CONTEST",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">2nd Runner-up</b> position in the <b>Programming Contest</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Md. Asaduzzaman",
+        coordRole: "Coordinator\nProgramming Contest\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Coding_Club_clean.png",
+        hasCoord: true
+      },
+      {
+        id: "prog_run2_3",
+        category: "Programming",
+        badge: "2nd Runner-up",
+        badgeClass: "badge-runner",
+        name: "Probal Barua Nandan",
+        position: "2nd Runner-up",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PROGRAMMING CONTEST",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">2nd Runner-up</b> position in the <b>Programming Contest</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Md. Asaduzzaman",
+        coordRole: "Coordinator\nProgramming Contest\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "BGCTUB_Coding_Club_clean.png",
+        hasCoord: true
+      },
+
+      // 3. IT Olympiad (2 LOGOS: BGCTUB LEFT, TECH FEST RIGHT)
+      {
+        id: "it_1",
+        category: "IT Olympiad",
+        badge: "1st Position",
+        badgeClass: "badge-pos",
+        name: "Mohammad Tareq Aziz",
+        position: "1st Position",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "IT OLYMPIAD",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">1st Position</b> in the <b>IT Olympiad</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Tisha Saha",
+        coordRole: "Coordinator\nIT Olympiad\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "",
+        hasCoord: true
+      },
+      {
+        id: "it_2",
+        category: "IT Olympiad",
+        badge: "2nd Position",
+        badgeClass: "badge-pos",
+        name: "Umma Samia",
+        position: "2nd Position",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "IT OLYMPIAD",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">2nd Position</b> in the <b>IT Olympiad</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Tisha Saha",
+        coordRole: "Coordinator\nIT Olympiad\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "",
+        hasCoord: true
+      },
+      {
+        id: "it_3",
+        category: "IT Olympiad",
+        badge: "3rd Position",
+        badgeClass: "badge-pos",
+        name: "Lutfur Rahman Adnan",
+        position: "3rd Position",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "IT OLYMPIAD",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">3rd Position</b> in the <b>IT Olympiad</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Tisha Saha",
+        coordRole: "Coordinator\nIT Olympiad\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "",
+        hasCoord: true
+      },
+
+      // 4. Physics & Mathematics Olympiad (2 LOGOS: BGCTUB LEFT, TECH FEST RIGHT)
+      {
+        id: "pm_1",
+        category: "Physics & Math",
+        badge: "1st Position",
+        badgeClass: "badge-pos",
+        name: "Sabina Akter",
+        position: "1st Position",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PHYSICS & MATHEMATICS OLYMPIAD",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">1st Position</b> in the <b>Physics & Mathematics Olympiad</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Nurul Absar",
+        coordRole: "Coordinator\nPhysics & Mathematics Olympiad\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "",
+        hasCoord: true
+      },
+      {
+        id: "pm_2",
+        category: "Physics & Math",
+        badge: "2nd Position",
+        badgeClass: "badge-pos",
+        name: "Opy Barua",
+        position: "2nd Position",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PHYSICS & MATHEMATICS OLYMPIAD",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">2nd Position</b> in the <b>Physics & Mathematics Olympiad</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Nurul Absar",
+        coordRole: "Coordinator\nPhysics & Mathematics Olympiad\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "",
+        hasCoord: true
+      },
+      {
+        id: "pm_3",
+        category: "Physics & Math",
+        badge: "3rd Position",
+        badgeClass: "badge-pos",
+        name: "Himu Akter",
+        position: "3rd Position",
+        subTitle: "OF ACHIEVEMENT",
+        ribbonText: "PHYSICS & MATHEMATICS OLYMPIAD",
+        preamble: "This is to certify that",
+        statement: "has achieved the <b class=\"role-highlight\">3rd Position</b> in the <b>Physics & Mathematics Olympiad</b> at <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "Nurul Absar",
+        coordRole: "Coordinator\nPhysics & Mathematics Olympiad\nCSE Tech Fest 2026, BGCTUB",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "",
+        hasCoord: true
+      },
+
+      // 5. Leadership & Contribution (2 LOGOS: BGCTUB LEFT, TECH FEST RIGHT; NO COORDINATOR -> 2 Signatures)
+      {
+        id: "lead_1",
+        category: "Leadership",
+        badge: "Publication Lead",
+        badgeClass: "badge-lead",
+        name: "Md. Tahmidul Alam Ahad",
+        position: "Documentation & Publication Lead",
+        subTitle: "OF APPRECIATION",
+        ribbonText: "LEADERSHIP & RECOGNITION",
+        preamble: "This certificate is proudly presented to",
+        statement: "in recognition of outstanding contribution and leadership as <b class=\"role-highlight\">Documentation and Publication Lead</b> for <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "",
+        coordRole: "",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "",
+        hasCoord: false
+      },
+      {
+        id: "lead_2",
+        category: "Leadership",
+        badge: "Operations Lead",
+        badgeClass: "badge-lead",
+        name: "Mohammad Tareq Aziz",
+        position: "Operations & Execution Lead",
+        subTitle: "OF APPRECIATION",
+        ribbonText: "LEADERSHIP & RECOGNITION",
+        preamble: "This certificate is proudly presented to",
+        statement: "in recognition of outstanding contribution and leadership as <b class=\"role-highlight\">Operations & Execution Lead</b> for <b>CSE Tech Fest 2026</b>, organized by the Department of Computer Science & Engineering, BGC Trust University Bangladesh.",
+        coordName: "",
+        coordRole: "",
+        chairName: "Mohammad Salah Uddin Chowdury",
+        chairRole: "Chairman\nDepartment of CSE, BGCTUB",
+        vcName: "Prof. Dr. Md. Manzoorul Kibria",
+        vcRole: "Vice Chancellor\nBGC Trust University Bangladesh",
+        leftLogo: "BGCTUB_Logo_clean.png",
+        midLogo: "Tech_Fest_Logo_clean.png",
+        rightLogo: "",
+        hasCoord: false
+      }
+    ];
+
+    let currentCertIndex = 0;
+    let currentFilter = 'All';
+    let zoomLevel = 0.70;
+    let isBatchCancelled = false;
+
+    // Render list
+    function renderList() {
+      const container = document.getElementById('certList');
+      container.innerHTML = '';
+
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      certificates.forEach((c, idx) => {
+        const matchesCategory = (currentFilter === 'All') || (c.category === currentFilter);
+        const matchesQuery = !query || c.name.toLowerCase().includes(query) || c.ribbonText.toLowerCase().includes(query) || c.position.toLowerCase().includes(query);
+
+        if (matchesCategory && matchesQuery) {
+          const item = document.createElement('div');
+          item.className = `cert-item ${idx === currentCertIndex ? 'active' : ''}`;
+          item.onclick = () => selectCertificate(idx);
+
+          item.innerHTML = `
+            <div class="item-top">
+              <span class="recipient-name">${c.name}</span>
+              <span class="badge ${c.badgeClass}">${c.badge}</span>
+            </div>
+            <div class="item-sub">
+              <i class="fa-solid fa-award"></i> ${c.ribbonText}
+            </div>
+          `;
+          container.appendChild(item);
+        }
+      });
+    }
+
+    function selectCertificate(index) {
+      currentCertIndex = index;
+      renderList();
+      populateForm();
+      updatePreview();
+    }
+
+    function setCategoryFilter(category) {
+      currentFilter = category;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(category) || (category === 'All' && btn.textContent.includes('All')));
+      });
+      renderList();
+    }
+
+    function filterCertificates() {
+      renderList();
+    }
+
+    // Populate Right Editor Form
+    function populateForm() {
+      const c = certificates[currentCertIndex];
+      document.getElementById('editRecipientName').value = c.name;
+      document.getElementById('editPosition').value = c.position;
+      document.getElementById('editSubTitle').value = c.subTitle;
+      document.getElementById('editRibbonText').value = c.ribbonText;
+      document.getElementById('editPreamble').value = c.preamble;
+      document.getElementById('editStatement').value = c.statement;
+      document.getElementById('editCoordName').value = c.coordName || '';
+      document.getElementById('editCoordRole').value = c.coordRole || '';
+      document.getElementById('editChairName').value = c.chairName;
+      document.getElementById('editVcName').value = c.vcName;
+      document.getElementById('editRightLogo').value = c.rightLogo || '';
+      document.getElementById('editMidLogo').value = c.midLogo;
+
+      // Toggle coordinator input visibility in editor
+      const coordSec = document.getElementById('coordInputSection');
+      if (c.hasCoord === false) {
+        coordSec.style.opacity = '0.4';
+        coordSec.style.pointerEvents = 'none';
+      } else {
+        coordSec.style.opacity = '1';
+        coordSec.style.pointerEvents = 'auto';
+      }
+    }
+
+    // Update Live Preview from Form
+    function updateLive() {
+      const c = certificates[currentCertIndex];
+      c.name = document.getElementById('editRecipientName').value;
+      c.position = document.getElementById('editPosition').value;
+      c.subTitle = document.getElementById('editSubTitle').value;
+      c.ribbonText = document.getElementById('editRibbonText').value;
+      c.preamble = document.getElementById('editPreamble').value;
+      c.statement = document.getElementById('editStatement').value;
+      c.coordName = document.getElementById('editCoordName').value;
+      c.coordRole = document.getElementById('editCoordRole').value;
+      c.chairName = document.getElementById('editChairName').value;
+      c.vcName = document.getElementById('editVcName').value;
+      c.rightLogo = document.getElementById('editRightLogo').value;
+      c.midLogo = document.getElementById('editMidLogo').value;
+
+      updatePreview();
+      renderList();
+    }
+
+    function updatePreview() {
+      const c = certificates[currentCertIndex];
+      document.getElementById('viewRecipientName').textContent = c.name;
+      document.getElementById('viewSubTitle').textContent = c.subTitle;
+      document.getElementById('viewRibbonText').textContent = c.ribbonText;
+      document.getElementById('viewPreamble').textContent = c.preamble;
+      document.getElementById('viewStatement').innerHTML = c.statement;
+
+      // Handle Coordinator and Footer Columns (3 cols vs 2 cols)
+      const footerEl = document.getElementById('viewCertFooter');
+      const colCoord = document.getElementById('colCoord');
+
+      if (c.hasCoord === false || !c.coordName || c.coordName.trim() === '') {
+        colCoord.style.display = 'none';
+        footerEl.classList.add('two-col');
+      } else {
+        colCoord.style.display = 'flex';
+        footerEl.classList.remove('two-col');
+        document.getElementById('viewCoordName').textContent = c.coordName;
+        document.getElementById('viewCoordRole').textContent = c.coordRole;
+      }
+
+      document.getElementById('viewChairName').textContent = c.chairName;
+      document.getElementById('viewChairRole').textContent = c.chairRole;
+      document.getElementById('viewVcName').textContent = c.vcName;
+      document.getElementById('viewVcRole').textContent = c.vcRole;
+
+      // Logo configuration:
+      // 3 Logos mode (Robotics, Programming): Left=BGCTUB, Mid=Tech Fest, Right=Club Logo
+      // 2 Logos mode (IT, Math/Phys, Leadership): Left=BGCTUB, Right=Tech Fest (Symmetrical across canvas)
+      const leftLogoEl = document.getElementById('viewLeftLogo');
+      const midLogoEl = document.getElementById('viewMidLogo');
+      const rightLogoEl = document.getElementById('viewRightLogo');
+
+      leftLogoEl.src = c.leftLogo;
+
+      if (c.rightLogo && c.rightLogo.trim() !== '') {
+        midLogoEl.src = c.midLogo;
+        midLogoEl.style.display = 'block';
+        rightLogoEl.src = c.rightLogo;
+        rightLogoEl.style.visibility = 'visible';
+      } else {
+        midLogoEl.style.display = 'none';
+        rightLogoEl.src = c.midLogo;
+        rightLogoEl.style.visibility = 'visible';
+      }
+    }
+
+    // Zoom Controls
+    function changeZoom(delta) {
+      zoomLevel = Math.max(0.4, Math.min(1.5, zoomLevel + delta));
+      applyZoom();
+    }
+    function resetZoom() {
+      zoomLevel = 0.85;
+      applyZoom();
+    }
+    function applyZoom() {
+      document.getElementById('certWrapper').style.transform = `scale(${zoomLevel})`;
+      document.getElementById('zoomVal').textContent = Math.round(zoomLevel * 100) + '%';
+    }
+
+    function changeTheme(bgPath) {
+      document.getElementById('certificate').style.backgroundImage = `url('${bgPath}')`;
+    }
+
+    // Single Export PDF
+    async function exportCurrentPDF() {
+      const btn = document.getElementById('downloadPdfBtn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+      btn.disabled = true;
+
+      try {
+        const c = certificates[currentCertIndex];
+        const certEl = document.getElementById('certificate');
+
+        const canvas = await html2canvas(certEl, {
+          scale: 3,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#fcfcfb',
+          width: certEl.offsetWidth,
+          height: certEl.offsetHeight
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+        const safeName = c.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const safeRole = c.position.replace(/[^a-zA-Z0-9]/g, '_');
+        pdf.save(`CSE_Tech_Fest_Certificate_${safeName}_${safeRole}.pdf`);
+      } catch (err) {
+        alert('PDF Export Error: ' + err.message);
+      } finally {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+      }
+    }
+
+    // Single Export PNG
+    async function exportCurrentPNG() {
+      const btn = document.getElementById('downloadPngBtn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rendering...';
+      btn.disabled = true;
+
+      try {
+        const c = certificates[currentCertIndex];
+        const certEl = document.getElementById('certificate');
+
+        const canvas = await html2canvas(certEl, {
+          scale: 3,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#fcfcfb',
+          width: certEl.offsetWidth,
+          height: certEl.offsetHeight
+        });
+
+        const safeName = c.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const safeRole = c.position.replace(/[^a-zA-Z0-9]/g, '_');
+        const link = document.createElement('a');
+        link.download = `CSE_Tech_Fest_Certificate_${safeName}_${safeRole}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        alert('PNG Export Error: ' + err.message);
+      } finally {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+      }
+    }
+
+    // Batch Export All 23 into a Combined High-Res Multi-page PDF
+    async function batchExportAllPDF() {
+      const modal = document.getElementById('batchModal');
+      const progressText = document.getElementById('modalProgressText');
+      const progressBar = document.getElementById('modalProgressBar');
+      modal.style.display = 'flex';
+      isBatchCancelled = false;
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const origIndex = currentCertIndex;
+
+      try {
+        for (let i = 0; i < certificates.length; i++) {
+          if (isBatchCancelled) break;
+
+          currentCertIndex = i;
+          updatePreview();
+          populateForm();
+
+          progressText.textContent = `Rendering ${i + 1} of ${certificates.length}: ${certificates[i].name}`;
+          progressBar.style.width = `${Math.round(((i + 1) / certificates.length) * 100)}%`;
+
+          await new Promise(r => setTimeout(r, 60));
+
+          const certEl = document.getElementById('certificate');
+          const canvas = await html2canvas(certEl, {
+            scale: 2.5,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#fcfcfb',
+            width: certEl.offsetWidth,
+            height: certEl.offsetHeight
+          });
+
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          if (i > 0) pdf.addPage('a4', 'landscape');
+          pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+        }
+
+        if (!isBatchCancelled) {
+          pdf.save('CSE_Tech_Fest_2026_All_23_Certificates.pdf');
+        }
+      } catch (err) {
+        alert('Batch Export Error: ' + err.message);
+      } finally {
+        modal.style.display = 'none';
+        currentCertIndex = origIndex;
+        updatePreview();
+        populateForm();
+        renderList();
+      }
+    }
+
+    function cancelBatchExport() {
+      isBatchCancelled = true;
+      document.getElementById('batchModal').style.display = 'none';
+    }
+
+    // Initialize App
+    window.addEventListener('DOMContentLoaded', () => {
+      renderList();
+      populateForm();
+      updatePreview();
+      applyZoom();
+    });
+  </script>
+</body>
+</html>
