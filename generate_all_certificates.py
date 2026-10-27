@@ -2,8 +2,7 @@ import os
 import re
 from PIL import Image, ImageDraw, ImageFont
 
-# Base directories
-CERT_DIR = r"C:\Users\HP\OneDrive\Desktop\Certificate"
+CERT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(CERT_DIR, "Generated_Certificates_PNG")
 os.makedirs(OUT_DIR, exist_ok=True)
 
